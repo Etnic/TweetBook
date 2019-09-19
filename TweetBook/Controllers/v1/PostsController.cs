@@ -58,9 +58,9 @@ namespace TweetBook.Controllers.V1
         }
 
         [HttpPost(ApiRoutes.Posts.Create)]
-        public bool Create([FromBody] CreatePostRequest createPostRequest)
+        public bool Create([FromRoute] Guid postId,[FromBody] CreatePostRequest createPostRequest)
         {
-            var post = new Post() { Id = createPostRequest.Id, Name = createPostRequest.Name };
+            var post = new Post() { Id = postId, Name = createPostRequest.Name };
 
             var result = this.postService.CreatePost(post);
 
