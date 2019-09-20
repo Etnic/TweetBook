@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tweetbook.Options;
 using TweetBook.Services;
+using Tweetbook.Installers;
 
 namespace TweetBook
 {
@@ -30,19 +31,7 @@ namespace TweetBook
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<DataContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDefaultIdentity<IdentityUser>()
-                .AddEntityFrameworkStores<DataContext>();
-
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-
-            services.AddSwaggerGen(x =>
-            x.SwaggerDoc("v1", new Swashbuckle.AspNetCore.Swagger.Info { Title = "api", Version = "v1" })           
-            );
-
-            services.AddScoped<IPostService, PostService>();
+            services.InstallServicesInAssembly(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,6 +48,10 @@ namespace TweetBook
                 app.UseHsts();
             }
 
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
+            app.UseAuthentication();
+
             var swaggerOptions = new SwaggerOptions();
             Configuration.GetSection(nameof(SwaggerOptions)).Bind(swaggerOptions);
 
@@ -69,8 +62,7 @@ namespace TweetBook
                 option.SwaggerEndpoint(swaggerOptions.UiEndpoint, swaggerOptions.Description);
             });
 
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
+            
 
             app.UseMvc(routes =>
             {
