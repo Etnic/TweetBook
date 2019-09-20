@@ -44,16 +44,16 @@ namespace TweetBook.Controllers.V1
         }
 
         [HttpPut(ApiRoutes.Posts.Update)]
-        public async Task<IActionResult> Update([FromBody] UpdatePostRequest updatePostRequest)
+        public async Task<IActionResult> Update([FromRoute]Guid postId, [FromBody] UpdatePostRequest updatePostRequest)
         {
-            var userOwnsPost = await this.postService.UserOwnsPostAsync(updatePostRequest.Id, HttpContext.GetUserId());
+            var userOwnsPost = await this.postService.UserOwnsPostAsync(postId, HttpContext.GetUserId());
 
             if (!userOwnsPost)
                             {
                 return BadRequest("You do not own this post");
             }
 
-            var post = new Post() { Id = updatePostRequest.Id, Name = updatePostRequest.Name };
+            var post = new Post() { Id = postId, Name = updatePostRequest.Name };
 
             var result = await this.postService.UpdatePost(post);
 
@@ -82,7 +82,7 @@ namespace TweetBook.Controllers.V1
         }
 
         [HttpPost(ApiRoutes.Posts.Create)]
-        public bool Create([FromRoute] string postId,[FromBody] CreatePostRequest createPostRequest)
+        public bool Create([FromBody] CreatePostRequest createPostRequest)
          {
             var newPost = Guid.NewGuid();
 
