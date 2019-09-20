@@ -26,7 +26,32 @@ namespace TweetBook.Services
             this.jwtSettings = jwtSettings;
         }
 
-        public async Task<AuthenticationResult> Register(UserRegistrationRequest userRegistrationRequest)
+        public async Task<AuthenticationResult> Login(UserLoginRequest userRegistrationRequest)
+        {
+            var user = await this.userManager.FindByEmailAsync(userRegistrationRequest.Email);
+
+            if (user == null)
+            {
+                return new AuthenticationResult()
+                {
+                    ErrorMessage = new[] { "user does not exits" }
+                };
+            }
+
+            var validPass = await this.userManager.CheckPasswordAsync(user, userRegistrationRequest.Password);
+
+            if (!validPass)
+            {
+                return new AuthenticationResult()
+                {
+                    ErrorMessage = new[] { "user/pass wrong" }
+                };
+            }
+
+            return GenerateAuthenitcationResult(user);
+        }
+
+        public async Task<AuthenticationResult> Register(UserLoginRequest userRegistrationRequest)
         {
             var userExists = this.userManager.FindByEmailAsync(userRegistrationRequest.Email);
 
@@ -54,6 +79,11 @@ namespace TweetBook.Services
                 };
             }
 
+            return GenerateAuthenitcationResult(user);
+        }
+
+        private AuthenticationResult GenerateAuthenitcationResult(IdentityUser user)
+        {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(this.jwtSettings.Secret);
 

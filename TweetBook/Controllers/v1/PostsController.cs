@@ -11,11 +11,12 @@ using TweetBook.Contracts.v1.Requests;
 using TweetBook.Contracts.v1.Response;
 using TweetBook.Contracts.V1;
 using TweetBook.Data;
+using TweetBook.Extensions;
 using TweetBook.Services;
 
 namespace TweetBook.Controllers.V1
 {
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+   // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class PostsController : Controller
     {
         private readonly IPostService postService;
@@ -43,27 +44,53 @@ namespace TweetBook.Controllers.V1
         }
 
         [HttpPut(ApiRoutes.Posts.Update)]
-        public bool Update([FromBody] UpdatePostRequest updatePostRequest)
+        public async Task<IActionResult> Update([FromBody] UpdatePostRequest updatePostRequest)
         {
+            var userOwnsPost = await this.postService.UserOwnsPostAsync(updatePostRequest.Id, HttpContext.GetUserId());
+
+            if (!userOwnsPost)
+                            {
+                return BadRequest("You do not own this post");
+            }
+
             var post = new Post() { Id = updatePostRequest.Id, Name = updatePostRequest.Name };
 
-            var result = this.postService.UpdatePost(post);
+            var result = await this.postService.UpdatePost(post);
 
-            return result.Result;
+            if (result)
+                Ok(result);
+
+            return NotFound();
         }
 
         [HttpDelete(ApiRoutes.Posts.Delete)]
-        public bool Delete([FromRoute] Guid postId)
+        public async Task<IActionResult> Delete([FromRoute] Guid postId)
         {
-            var result = this.postService.DeletePost(postId);
+            var userOwnsPost = await this.postService.UserOwnsPostAsync(postId, HttpContext.GetUserId());
 
-            return result.Result;
+            if (!userOwnsPost)
+            {
+                return BadRequest("You do not own this post");
+            }
+
+            var result = await this.postService.DeletePost(postId);
+
+            if (result)
+                Ok(result);
+
+            return NotFound();
         }
 
         [HttpPost(ApiRoutes.Posts.Create)]
-        public bool Create([FromRoute] Guid postId,[FromBody] CreatePostRequest createPostRequest)
-        {
-            var post = new Post() { Id = postId, Name = createPostRequest.Name };
+        public bool Create([FromRoute] string postId,[FromBody] CreatePostRequest createPostRequest)
+         {
+            var newPost = Guid.NewGuid();
+
+            var post = new Post()
+            {   Id = newPost,
+                Name = createPostRequest.Name,
+                UserId = HttpContext.GetUserId()                
+            };
 
             var result = this.postService.CreatePost(post);
 

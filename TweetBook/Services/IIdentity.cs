@@ -10,6 +10,7 @@ namespace TweetBook.Services
 {
     public interface IIdentity
     {
-        Task<AuthenticationResult> Register(UserRegistrationRequest userRegistrationRequest);
+        Task<AuthenticationResult> Register(UserLoginRequest userRegistrationRequest);
+        Task<AuthenticationResult> Login(UserLoginRequest userRegistrationRequest);
     }
 }
