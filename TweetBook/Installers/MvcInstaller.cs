@@ -27,7 +27,7 @@ namespace Tweetbook.Installers
                 ValidateLifetime = true
             };
 
-            //services.AddSingleton(tokenValidationParameters);
+            services.AddSingleton(tokenValidationParameters);
             services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_2);
 
             services.AddAuthorization();
